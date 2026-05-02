@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Strassen — Results</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0f1117; --surface:#181c25; --surface2:#1e2330; --border:#2a2f3d;
+  --text:#d4d8e3; --muted:#6b7280; --accent:#4f8ff7; --green:#34d399;
+  --orange:#f59e42; --purple:#a78bfa; --red:#f87171;
+  --seq:#4f8ff7; --par:#34d399; --str:#f59e42; --pstr:#a78bfa;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,-apple-system,system-ui,sans-serif;line-height:1.5}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:20px;padding:20px 32px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.topbar h1{font-size:18px;font-weight:600;white-space:nowrap}
+.topbar select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:14px;cursor:pointer}
+.topbar .stats{margin-left:auto;color:var(--muted);font-size:13px}
+
+/* headline */
+.headline{padding:20px 32px 0;font-size:15px;color:var(--muted)}
+.headline strong{color:var(--text)}
+
+/* layout */
+main{padding:20px 32px 48px;display:flex;flex-direction:column;gap:20px;max-width:1200px;margin:0 auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.row{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:2px}
+.card .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart-box{position:relative;height:300px}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap}
+.tbl th:hover{color:var(--text)}
+.tbl th.asc::after{content:" ▲";color:var(--accent)}
+.tbl th.desc::after{content:" ▼";color:var(--accent)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12px}
+.tbl tr:hover td{background:var(--surface2)}
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-Strassen{background:rgba(245,158,66,.15);color:var(--str)}
+.tag-ParStrassen{background:rgba(167,139,250,.15);color:var(--pstr)}
+.pass{color:var(--green)} .fail{color:var(--red)}
+
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px;border-top:1px solid var(--border)}
+</style></head><body>
+
+<div class="topbar">
+  <h1>Strassen — Benchmark Results</h1>
+  <label>Matrix size: <select id="nSel"></select></label>
+  <div class="stats" id="stats"></div>
+</div>
+<div class="headline" id="headline"></div>
+
+<main>
+  <div class="row">
+    <div class="card">
+      <h2>Execution time by method</h2>
+      <div class="sub">Best configuration per method at this n. Lower is better.</div>
+      <div class="chart-box"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Time vs number of cores</h2>
+      <div class="sub">Parallel methods only. Shows how adding cores reduces time.</div>
+      <div class="chart-box"><canvas id="coresChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>All runs at this size</h2>
+    <div class="sub">Click a column header to sort.</div>
+    <div style="overflow-x:auto"><table class="tbl"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  </div>
+</main>
+
+<footer>Generated 2026-05-02 23:05</footer>
+
+<script>
+const DATA = [{"method": "ParMtrixMult", "n": 1024, "time_s": 0.393291, "cores": 16, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 1024, "time_s": 1.297174, "cores": 2, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 1024, "time_s": 0.685024, "cores": 4, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 1024, "time_s": 0.441714, "cores": 8, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 128, "time_s": 0.002918, "cores": 16, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 128, "time_s": 0.003039, "cores": 2, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 128, "time_s": 0.002999, "cores": 4, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 128, "time_s": 0.00313, "cores": 8, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 256, "time_s": 0.013835, "cores": 16, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 256, "time_s": 0.009999, "cores": 2, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 256, "time_s": 0.004873, "cores": 4, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 256, "time_s": 0.002998, "cores": 8, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 512, "time_s": 0.038001, "cores": 16, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 512, "time_s": 0.169406, "cores": 2, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 512, "time_s": 0.082345, "cores": 4, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 512, "time_s": 0.050014, "cores": 8, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 64, "time_s": 0.002789, "cores": 16, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 64, "time_s": 0.000229, "cores": 2, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 64, "time_s": 0.002656, "cores": 4, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParMtrixMult", "n": 64, "time_s": 0.002809, "cores": 8, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.094027, "cores": 16, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.080948, "cores": 16, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.347838, "cores": 16, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.71232, "cores": 16, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.30557, "cores": 16, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.413334, "cores": 16, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.084829, "cores": 16, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.10007, "cores": 16, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.098719, "cores": 2, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.07535, "cores": 2, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.270103, "cores": 2, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.55636, "cores": 2, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.308495, "cores": 2, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.411033, "cores": 2, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.0844, "cores": 2, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.096683, "cores": 2, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.107027, "cores": 4, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.07799, "cores": 4, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.418348, "cores": 4, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.594989, "cores": 4, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.324048, "cores": 4, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.394645, "cores": 4, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.080515, "cores": 4, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.096477, "cores": 4, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.104366, "cores": 8, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.077651, "cores": 8, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.548699, "cores": 8, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 1.569704, "cores": 8, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.29569, "cores": 8, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.426219, "cores": 8, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.076268, "cores": 8, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 1024, "time_s": 0.100245, "cores": 8, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.00544, "cores": 16, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.040266, "cores": 16, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.006662, "cores": 16, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.034253, "cores": 16, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.012391, "cores": 16, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.002158, "cores": 16, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.008721, "cores": 2, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.0142, "cores": 2, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.002635, "cores": 2, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.008149, "cores": 2, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.002336, "cores": 2, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.001471, "cores": 2, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.005666, "cores": 4, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.031585, "cores": 4, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.003091, "cores": 4, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.008435, "cores": 4, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.003224, "cores": 4, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.002489, "cores": 4, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.008367, "cores": 8, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.040712, "cores": 8, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.002848, "cores": 8, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.041682, "cores": 8, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.003961, "cores": 8, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 128, "time_s": 0.004295, "cores": 8, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 16384, "time_s": 192.69168, "cores": 16, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 171.261307, "cores": 16, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 272.761763, "cores": 16, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 253.059164, "cores": 16, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 139.04927, "cores": 16, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 185.833266, "cores": 16, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 181.33412, "cores": 2, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 161.604384, "cores": 2, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 262.665766, "cores": 2, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 260.357384, "cores": 2, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 159.823115, "cores": 2, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 178.537385, "cores": 2, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 175.905034, "cores": 4, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 160.071124, "cores": 4, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 270.30962, "cores": 4, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 262.285878, "cores": 4, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 136.157103, "cores": 4, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 180.327023, "cores": 4, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 176.85447, "cores": 8, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 160.246566, "cores": 8, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 257.193811, "cores": 8, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 259.248909, "cores": 8, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 137.814639, "cores": 8, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 16384, "time_s": 179.083292, "cores": 8, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.752659, "cores": 16, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.542481, "cores": 16, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 10.011002, "cores": 16, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 17.294664, "cores": 16, "base_case": 16, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 1.966406, "cores": 16, "base_case": 32, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 4.625824, "cores": 16, "base_case": 32, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.591162, "cores": 16, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.700278, "cores": 16, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.602736, "cores": 2, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.542232, "cores": 2, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 10.366448, "cores": 2, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 10.53473, "cores": 2, "base_case": 16, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.065539, "cores": 2, "base_case": 32, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.874931, "cores": 2, "base_case": 32, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.481975, "cores": 2, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.619411, "cores": 2, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.707418, "cores": 4, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.514838, "cores": 4, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 9.412911, "cores": 4, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 10.704556, "cores": 4, "base_case": 16, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.118428, "cores": 4, "base_case": 32, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.988874, "cores": 4, "base_case": 32, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.594334, "cores": 4, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.591731, "cores": 4, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.706429, "cores": 8, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.506889, "cores": 8, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 9.522061, "cores": 8, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 10.713112, "cores": 8, "base_case": 16, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.092808, "cores": 8, "base_case": 32, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 2.817907, "cores": 8, "base_case": 32, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.492206, "cores": 8, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 2048, "time_s": 0.631606, "cores": 8, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 256, "time_s": 0.005182, "cores": 16, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.005005, "cores": 16, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.038796, "cores": 16, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.046322, "cores": 16, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.008577, "cores": 16, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.018346, "cores": 16, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.011309, "cores": 16, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.010368, "cores": 16, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.011989, "cores": 2, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.003738, "cores": 2, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.027833, "cores": 2, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.046551, "cores": 2, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.014721, "cores": 2, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.019007, "cores": 2, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004179, "cores": 2, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.008133, "cores": 2, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004172, "cores": 4, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004657, "cores": 4, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.031743, "cores": 4, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.038963, "cores": 4, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.009454, "cores": 4, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.032118, "cores": 4, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.01286, "cores": 4, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.023459, "cores": 4, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004542, "cores": 8, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004939, "cores": 8, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.036874, "cores": 8, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.036621, "cores": 8, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.008876, "cores": 8, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.02444, "cores": 8, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.004422, "cores": 8, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 256, "time_s": 0.01274, "cores": 8, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 4096, "time_s": 4.166041, "cores": 16, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.248293, "cores": 16, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 146.497342, "cores": 16, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 213.230802, "cores": 16, "base_case": 16, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 11.723312, "cores": 16, "base_case": 32, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 56.244645, "cores": 16, "base_case": 32, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.111818, "cores": 16, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.682953, "cores": 16, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.979624, "cores": 2, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.302846, "cores": 2, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 81.62473, "cores": 2, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 5.896346, "cores": 2, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 5.038828, "cores": 2, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.256326, "cores": 2, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.92968, "cores": 2, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 4.218796, "cores": 4, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.303519, "cores": 4, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 5.820456, "cores": 4, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 4.906609, "cores": 4, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.121254, "cores": 4, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.938513, "cores": 4, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 4.053879, "cores": 8, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.309369, "cores": 8, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 5.950376, "cores": 8, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 4.957903, "cores": 8, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.038883, "cores": 8, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 4096, "time_s": 3.947921, "cores": 8, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 512, "time_s": 0.017862, "cores": 16, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.018271, "cores": 16, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.224055, "cores": 16, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.220664, "cores": 16, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.051672, "cores": 16, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.079237, "cores": 16, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.015708, "cores": 16, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.022733, "cores": 16, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.018726, "cores": 2, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.017399, "cores": 2, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.186163, "cores": 2, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.245063, "cores": 2, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.051919, "cores": 2, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.066185, "cores": 2, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.018668, "cores": 2, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.022595, "cores": 2, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.019685, "cores": 4, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.017738, "cores": 4, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.194019, "cores": 4, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.19557, "cores": 4, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.051029, "cores": 4, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.068862, "cores": 4, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.01566, "cores": 4, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.024241, "cores": 4, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.017885, "cores": 8, "base_case": 128, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.017467, "cores": 8, "base_case": 128, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.195772, "cores": 8, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.198729, "cores": 8, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.052219, "cores": 8, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.068026, "cores": 8, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.016574, "cores": 8, "base_case": 64, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 512, "time_s": 0.022845, "cores": 8, "base_case": 64, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.001801, "cores": 16, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.025508, "cores": 16, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.001305, "cores": 16, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.002304, "cores": 16, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.00382, "cores": 2, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.008276, "cores": 2, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.001602, "cores": 2, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.000991, "cores": 2, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.005033, "cores": 4, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.011903, "cores": 4, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.008552, "cores": 4, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.001302, "cores": 4, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.001851, "cores": 8, "base_case": 16, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.007172, "cores": 8, "base_case": 16, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.002733, "cores": 8, "base_case": 32, "depth": 1, "verification": "PASS"}, {"method": "ParStrassen", "n": 64, "time_s": 0.008532, "cores": 8, "base_case": 32, "depth": 2, "verification": "PASS"}, {"method": "ParStrassen", "n": 8192, "time_s": 28.636713, "cores": 16, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 23.747419, "cores": 16, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 1173.004214, "cores": 16, "base_case": 16, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 44.631301, "cores": 16, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 35.080418, "cores": 16, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 23.20676, "cores": 16, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 28.228164, "cores": 16, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 29.669227, "cores": 2, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 23.054388, "cores": 2, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 39.094521, "cores": 2, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 35.280526, "cores": 2, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 21.298881, "cores": 2, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 27.227468, "cores": 2, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 26.669072, "cores": 4, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 22.892501, "cores": 4, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 40.290088, "cores": 4, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 36.785715, "cores": 4, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 20.799244, "cores": 4, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 27.169489, "cores": 4, "base_case": 64, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 27.084818, "cores": 8, "base_case": 128, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 24.054547, "cores": 8, "base_case": 128, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 40.319627, "cores": 8, "base_case": 256, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 35.484978, "cores": 8, "base_case": 256, "depth": 2, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 22.629016, "cores": 8, "base_case": 64, "depth": 1, "verification": ""}, {"method": "ParStrassen", "n": 8192, "time_s": 28.403612, "cores": 8, "base_case": 64, "depth": 2, "verification": ""}, {"method": "Sequential", "n": 1024, "time_s": 2.827402, "cores": 1, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "Sequential", "n": 128, "time_s": 0.001162, "cores": 1, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "Sequential", "n": 2048, "time_s": 59.719704, "cores": 1, "base_case": null, "depth": null, "verification": ""}, {"method": "Sequential", "n": 256, "time_s": 0.010211, "cores": 1, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "Sequential", "n": 4096, "time_s": 609.7301, "cores": 1, "base_case": null, "depth": null, "verification": ""}, {"method": "Sequential", "n": 512, "time_s": 0.292933, "cores": 1, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "Sequential", "n": 64, "time_s": 0.000114, "cores": 1, "base_case": null, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 1024, "time_s": 0.454567, "cores": 1, "base_case": 128, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 1024, "time_s": 0.87688, "cores": 1, "base_case": 16, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 1024, "time_s": 0.348395, "cores": 1, "base_case": 32, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 1024, "time_s": 0.308278, "cores": 1, "base_case": 64, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 128, "time_s": 0.002586, "cores": 1, "base_case": 16, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 128, "time_s": 0.001538, "cores": 1, "base_case": 32, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 128, "time_s": 0.0014, "cores": 1, "base_case": 64, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 16384, "time_s": 1042.165548, "cores": 1, "base_case": 128, "depth": null, "verification": ""}, {"method": "Strassen", "n": 16384, "time_s": 1491.632413, "cores": 1, "base_case": 256, "depth": null, "verification": ""}, {"method": "Strassen", "n": 16384, "time_s": 706.276947, "cores": 1, "base_case": 64, "depth": null, "verification": ""}, {"method": "Strassen", "n": 2048, "time_s": 4.864307, "cores": 1, "base_case": 256, "depth": null, "verification": ""}, {"method": "Strassen", "n": 256, "time_s": 0.009397, "cores": 1, "base_case": 128, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 256, "time_s": 0.017481, "cores": 1, "base_case": 16, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 256, "time_s": 0.007194, "cores": 1, "base_case": 32, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 256, "time_s": 0.006393, "cores": 1, "base_case": 64, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 4096, "time_s": 30.92234, "cores": 1, "base_case": 256, "depth": null, "verification": ""}, {"method": "Strassen", "n": 512, "time_s": 0.068312, "cores": 1, "base_case": 128, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 512, "time_s": 0.123045, "cores": 1, "base_case": 16, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 512, "time_s": 0.053695, "cores": 1, "base_case": 32, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 512, "time_s": 0.046634, "cores": 1, "base_case": 64, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 64, "time_s": 0.00062, "cores": 1, "base_case": 16, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 64, "time_s": 0.000259, "cores": 1, "base_case": 32, "depth": null, "verification": "PASS"}, {"method": "Strassen", "n": 8192, "time_s": 209.57573, "cores": 1, "base_case": 256, "depth": null, "verification": ""}];
+const METHODS = ['Strassen','ParStrassen'];
+const COLORS = {Strassen:'#f59e42',ParStrassen:'#a78bfa'};
+const CHART_OPTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#d4d8e3'}},
+    tooltip:{backgroundColor:'#181c25',borderColor:'#2a2f3d',borderWidth:1,titleColor:'#d4d8e3',bodyColor:'#d4d8e3'}},
+  scales:{
+    x:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}},
+    y:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}}
+  }
+};
+
+let barChart, coresChart;
+let sortKey='time_s', sortDir=1;
+
+// ---- populate size dropdown ---- //
+const ns = [...new Set(DATA.map(d=>d.n))].sort((a,b)=>a-b);
+const sel = document.getElementById('nSel');
+ns.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)});
+// default to largest n
+sel.value = ns[ns.length-1];
+sel.addEventListener('change', render);
+
+function atN(){ return DATA.filter(d=>d.n===+sel.value && d.time_s>0); }
+
+// ---- best per method ---- //
+function bestPerMethod(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.method]||r.time_s<m[r.method].time_s) m[r.method]=r;
+  });
+  return METHODS.filter(k=>m[k]).map(k=>m[k]);
+}
+
+// ---- headline ---- //
+function renderHeadline(rows){
+  const el=document.getElementById('headline');
+  const best=bestPerMethod(rows);
+  if(best.length<2){el.textContent='';return}
+  const strassen=best.find(r=>r.method==='Strassen');
+  const parstrassen=best.find(r=>r.method==='ParStrassen');
+  best.sort((a,b)=>a.time_s-b.time_s);
+  const winner=best[0];
+  if(strassen && parstrassen && parstrassen.time_s < strassen.time_s){
+    const ratio=(strassen.time_s/parstrassen.time_s).toFixed(1);
+    el.innerHTML=`At <strong>n = ${sel.value}</strong>, <strong>ParStrassen</strong> is <strong>${ratio}× faster</strong> than Strassen (${parstrassen.time_s.toFixed(3)}s vs ${strassen.time_s.toFixed(3)}s)`;
+  } else if(strassen) {
+    el.innerHTML=`At <strong>n = ${sel.value}</strong>, <strong>Strassen</strong> is fastest at <strong>${strassen.time_s.toFixed(3)}s</strong> (parallelism overhead outweighs gains at this size)`;
+  } else {
+    el.innerHTML=`At <strong>n = ${sel.value}</strong>, best time is <strong>${winner.time_s.toFixed(3)}s</strong> (${winner.method})`;
+  }
+}
+
+// ---- bar chart ---- //
+function renderBar(rows){
+  const best=bestPerMethod(rows);
+  const ctx=document.getElementById('barChart');
+  if(barChart) barChart.destroy();
+  barChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:best.map(r=>r.method),
+      datasets:[{
+        data:best.map(r=>r.time_s),
+        backgroundColor:best.map(r=>COLORS[r.method]),
+        borderRadius:4,
+        maxBarThickness:60,
+      }]
+    },
+    options:{...CHART_OPTS,
+      indexAxis:'y',
+      plugins:{...CHART_OPTS.plugins,legend:{display:false},
+        tooltip:{...CHART_OPTS.plugins.tooltip,
+          callbacks:{label:ctx=>{
+            const r=best[ctx.dataIndex];
+            const parts=[`${r.time_s.toFixed(4)}s`];
+            if(r.cores>1) parts.push(`${r.cores} cores`);
+            if(r.base_case!=null) parts.push(`base=${r.base_case}`);
+            if(r.depth!=null) parts.push(`depth=${r.depth}`);
+            return parts.join('  ·  ');
+          }}
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'time (seconds)',color:'#6b7280'},
+           ticks:{color:'#6b7280'},grid:{color:'#1e2330'},beginAtZero:true},
+        y:{ticks:{color:'#d4d8e3',font:{size:13}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+// ---- cores chart ---- //
+function renderCores(rows){
+  const ctx=document.getElementById('coresChart');
+  if(coresChart) coresChart.destroy();
+  const datasets=[];
+
+  // ParStrassen: best time at each core count (across base/depth)
+  const byCores={};
+  rows.filter(r=>r.method==='ParStrassen').forEach(r=>{
+    if(!byCores[r.cores]||r.time_s<byCores[r.cores].time_s) byCores[r.cores]=r;
+  });
+  const pts=Object.values(byCores).sort((a,b)=>a.cores-b.cores);
+  if(pts.length){
+    datasets.push({
+      label:'ParStrassen',
+      data:pts.map(p=>({x:p.cores,y:p.time_s})),
+      borderColor:COLORS.ParStrassen,
+      backgroundColor:COLORS.ParStrassen,
+      tension:.25, pointRadius:5, pointHoverRadius:7,
+      showLine:pts.length>1,
+    });
+  }
+
+  // Strassen baseline as horizontal dashed line
+  const strassen=rows.filter(r=>r.method==='Strassen');
+  if(strassen.length){
+    const best=Math.min(...strassen.map(r=>r.time_s));
+    const maxC=Math.max(...rows.map(r=>r.cores),2);
+    datasets.push({
+      label:'Strassen (sequential)',
+      data:[{x:1,y:best},{x:maxC,y:best}],
+      borderColor:COLORS.Strassen, borderDash:[6,4], pointRadius:0, fill:false,
+    });
+  }
+
+  coresChart=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets},
+    options:{...CHART_OPTS,
+      scales:{
+        x:{type:'linear',title:{display:true,text:'cores',color:'#6b7280'},
+           ticks:{color:'#6b7280',stepSize:1},grid:{color:'#1e2330'},min:.5},
+        y:{title:{display:true,text:'time (seconds)',color:'#6b7280'},
+           ticks:{color:'#6b7280'},grid:{color:'#1e2330'},beginAtZero:true}
+      }
+    }
+  });
+}
+
+// ---- table ---- //
+const COLS=[
+  ['method','Method'],['time_s','Time (s)'],['cores','Cores'],
+  ['base_case','Base case'],['depth','Depth'],['verification','Verify']
+];
+
+function renderTable(rows){
+  // header
+  document.getElementById('thead').innerHTML='<tr>'+COLS.map(([k,label])=>{
+    const cls=k===sortKey?(sortDir>0?'asc':'desc'):'';
+    return `<th class="${cls}" data-k="${k}">${label}</th>`;
+  }).join('')+'</tr>';
+  document.querySelectorAll('.tbl th').forEach(th=>{
+    th.onclick=()=>{
+      const k=th.dataset.k;
+      if(sortKey===k) sortDir=-sortDir; else {sortKey=k;sortDir=1;}
+      renderTable(atN());
+    };
+  });
+
+  // sort
+  const sorted=[...rows].sort((a,b)=>{
+    let av=a[sortKey],bv=b[sortKey];
+    if(av==null&&bv==null)return 0; if(av==null)return 1; if(bv==null)return -1;
+    if(typeof av==='number'&&typeof bv==='number') return (av-bv)*sortDir;
+    return String(av).localeCompare(String(bv))*sortDir;
+  });
+
+  // body
+  document.getElementById('tbody').innerHTML=sorted.map(r=>'<tr>'+COLS.map(([k])=>{
+    const v=r[k];
+    if(k==='method') return `<td><span class="tag tag-${v}">${v}</span></td>`;
+    if(k==='verification') return `<td class="${v==='PASS'?'pass':'fail'}">${v||'—'}</td>`;
+    if(k==='time_s') return `<td>${v.toFixed(4)}</td>`;
+    return `<td>${v!=null?v:'—'}</td>`;
+  }).join('')+'</tr>').join('');
+}
+
+// ---- stats ---- //
+function renderStats(rows){
+  const pass=rows.filter(r=>r.verification==='PASS').length;
+  const fail=rows.filter(r=>r.verification==='FAIL').length;
+  const methods=new Set(rows.map(r=>r.method)).size;
+  document.getElementById('stats').textContent=
+    `${rows.length} runs · ${methods} methods · ${pass} passed` + (fail?` · ${fail} failed`:'');
+}
+
+// ---- master render ---- //
+function render(){
+  const rows=atN();
+  renderStats(rows);
+  renderHeadline(rows);
+  renderBar(rows);
+  renderCores(rows);
+  renderTable(rows);
+}
+render();
+</script></body></html>

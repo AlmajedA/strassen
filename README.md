@@ -220,4 +220,3 @@ For correctness verification on huge `n`, the NumPy oracle is also slow on
 A note on `n = 16 384`: with `int64`, each matrix is 2 GB, and Strassen
 needs many temporaries — peak RSS comfortably exceeds 16 GB.
 See REPORT.md §11 for the full memory analysis.
-# strassen

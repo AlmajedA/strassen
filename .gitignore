@@ -1,0 +1,29 @@
+# Cython build artifacts
+build/
+algorithms_omp.c
+*.so
+*.pyd
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Generated results and inputs
+results/
+inputs/
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
